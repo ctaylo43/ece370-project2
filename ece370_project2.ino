@@ -90,6 +90,7 @@ void setup() {
   APsetup(); // Setup uC access point for pi
   udp.begin(UDP_PORT); // Open ports used for UDP
   initStructs(); // initialize data structures
+  pinSetup(); // set i/o pins for motors and ir sensors
   IMU_setup(); // set pins for IMU
   //debug_setup(); // serial debugging
 }
