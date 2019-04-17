@@ -10,19 +10,41 @@ using namespace BLA;
 
 #include "arduino_secrets.h"
 
+// Pin Definitions //
+#define MOT_L_A 12
+#define MOT_L_B 13
+#define MOT_R_A 5
+#define MOT_R_A 6
+#define IRPIN_L 11
+#define IRPIN_R 10
+
 // WiFi Variables //
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;                 // your network key Index number (needed only for WEP)
 
+// UDP Variables //
+#define UDP_PORT = 5000;
+char packetBuffer[1023];
+WiFiUDP udp;
+
+// Velocity struct
+struct Velocity {
+  int v;
+  int theta;
+};
+struct Velocity a;
+
+// IMU Variables
+LSM303 imu;
+bool picked_up;
+
 void setup() {
   APsetup(); // Setup uC access point for pi
-  openPorts(); // Open ports used for UDP
+  udp.begin(UDP_PORT); // Open ports used for UDP
   initStructs(); // initialize data structures
-  IR_setup(); // set pins IR sensor
-  motor_setup(); // set pins for motor
   IMU_setup(); // set pins for IMU
-  debug_setup(); // serial debugging
+  //debug_setup(); // serial debugging
 }
 
 void loop() {
@@ -39,7 +61,8 @@ void loop() {
 
 // Functions //
 
-void APsetup(){
+void APsetup()
+{
   // Set WiFi pins on Feather M0
   WiFi.setPins(8,7,4,2);
   //Initialize serial and wait for port to open:
@@ -83,4 +106,29 @@ void APsetup(){
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+void initStructs()
+{
+  a.v = 0;
+  a.theta = 0;
+}
+
+void pinSetup()
+{
+  pinMode(MOT_L_A, OUTPUT);
+  pinMode(MOT_L_B, OUTPUT);
+  pinMode(MOT_R_A, OUTPUT);
+  pinMode(MOT_R_B, OUTPUT);
+  pinMode(IRPIN_L, INPUT);
+  pinMode(IRPIN_R, INPUT);
+  attachInterrupt(IRPIN_L, ISR_L, RISING);
+  attachInterrupt(IRPIN_R, ISR_R, RISING);
+}
+
+void IMU_setup()
+{
+  Wire.begin();
+  imu.init();
+  imu.enableDefault();
 }
