@@ -18,6 +18,15 @@ using namespace BLA;
 #define IRPIN_L 11
 #define IRPIN_R 10
 
+// Odometry Constants //
+#define L 80  // baseline in mm
+#define RADIUS  20 // radius of the wheels
+#define GEAR_RATIO  75.81 // Motor gear ratio
+
+// Motor Variables //
+volatile pwm_motR = 0;
+volatile pwm_motL = 0;
+
 // WiFi Variables //
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
@@ -39,6 +48,44 @@ struct Velocity a;
 LSM303 imu;
 bool picked_up;
 
+// Odometry Variables //
+float phi = (RADIUS * deg2rad(90 / GEAR_RATIO));
+double delta_x = 0, delta_y = 0, z = 0;
+
+// Matrices //
+Matrix<4,4> right_wheel = {
+   cos(phi),  -sin(phi),  0,  0,
+   sin(phi),  cos(phi), 0,  L / 2,
+   0, 0,  1,  0,
+   0, 0,  0,  1};
+
+Matrix<4,4> right_translate = {
+  1,  0,  0,  0,
+  0,  1,  0,  -L,
+  0,  0,  1,  0,
+  0,  0,  0,  1};
+
+Matrix<4,4> left_wheel = {
+   cos(-phi),  -sin(-phi),  0,  0,
+   sin(-phi),  cos(-phi), 0,  -L / 2,
+   0, 0,  1,  0,
+   0, 0,  0,  1};
+
+Matrix<4,4> left_translate = {
+  1,  0,  0,  0,
+  0,  1,  0,  L,
+  0,  0,  1,  0,
+  0,  0,  0,  1};
+
+Matrix<4,4> global_matrix = {
+  1,  0,  0,  0,
+  0,  1,  0,  0,
+  0,  0,  1,  0,
+  0,  0,  0,  1};
+
+Matrix<4,4> right_transform = right_wheel * right_translate;
+Matrix<4,4> left_transform = left_wheel * left_translate;
+
 void setup() {
   APsetup(); // Setup uC access point for pi
   udp.begin(UDP_PORT); // Open ports used for UDP
@@ -54,9 +101,10 @@ void loop() {
   setSpeed(v); // set speed of robot
   setDir(theta); // set direction of robot
   if (picked_up){ // stop motors when robot is picked up
-    mot_R = 0;
-    mot_L = 0;
+    pwm_motL = 0;
+    pwm_motR = 0;
   }
+  motor();
 }
 
 // Functions //
@@ -131,4 +179,48 @@ void IMU_setup()
   Wire.begin();
   imu.init();
   imu.enableDefault();
+}
+
+void checkIMU()
+{
+  imu.read();
+  if (some value){  // placeholder value
+    picked_up = true;
+  }
+  else {
+    picked_up = false;
+  }
+}
+
+void checkUDP()
+{
+
+}
+
+void setSpeed(int v)
+{
+
+}
+
+void setDir(int theta)
+{
+
+}
+
+void motor()
+{
+  analogWrite(MOT_L_A, pwm_motL);
+  analogWrite(MOT_L_B, 0);
+  analogWrite(MOT_R_A, pwm_motR);
+  analogWrite(MOT_R_B, 0);
+}
+
+void ISR_L()
+{
+
+}
+
+void ISR_R()
+{
+
 }
