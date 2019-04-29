@@ -14,6 +14,11 @@
 #define IRPIN_L 11
 #define IRPIN_R 12
 
+// Motor Variables //
+int pwm_motR = 0;
+int pwm_motL = 0;
+bool pickup = false;
+
 // WiFi Variables // 
 char ssid[] = SECRET_SSID;    // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
@@ -37,9 +42,11 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  checkIMU();
 
 }
+
+// Setup Functions //
 
 void APsetup(){
   // Set WiFi pins on Feather M0
@@ -62,8 +69,8 @@ void pinSetup(){
   pinMode(MOT_R_B, OUTPUT);
   pinMode(IRPIN_L, INPUT);
   pinMode(IRPIN_R, INPUT);
-  attachInterrupt(digitalPinToInterrupt(IRPIN_L), ISR_L, RISING);
-  attachInterrupt((digitalPinToInterrupt(IRPIN_R), ISR_R, RISING);
+  //attachInterrupt(digitalPinToInterrupt(IRPIN_L), ISR_L, RISING);
+  //attachInterrupt((digitalPinToInterrupt(IRPIN_R), ISR_R, RISING);
 }
 
 void IMU_setup(){
@@ -72,4 +79,34 @@ void IMU_setup(){
   compass.enableDefault();
   compass.m_min = (LSM303::vector<int16_t>){-5867, -4073, -4321};
   compass.m_max = (LSM303::vector<int16_t>){+935, +2096, +1928};
+}
+
+// Loop Functions //
+
+void checkIMU(){
+  compass.read();
+  int az = compass.a.z >> 4;
+  float g = (float)((float)az/1000);
+  if (0.91 > g){
+    pickup = true;
+  }
+  else {
+    pickup = false;
+  }
+}
+
+void motor(){
+  if (pickup){
+    pwm_motL = 0;
+    pwm_motR = 0;
+  }
+  else {
+    pwm_motL = 100;
+    pwm_motR = 100;
+  }
+  
+  analogWrite(MOT_L_A, pwm_motL);
+  analogWrite(MOT_L_B, 0);
+  analogWrite(MOT_R_A, pwm_motR);
+  analogWrite(MOT_R_B, 0);
 }
