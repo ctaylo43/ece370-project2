@@ -4,7 +4,7 @@
 #include <LSM303.h>
 #include <Wire.h>
 #include <SPI.h>
-#include "arduino_secreyts.h"
+#include "arduino_secrets.h"
 
 // Pin Definitions //
 #define MOT_L_A 5
@@ -34,16 +34,16 @@ WiFiUDP udp;
 LSM303 compass;
 
 void setup() {
-  APsetup();
-  udp.begin(localPort);
-  Serial.println("UDP setup complete");
+  //APsetup();
+  //udp.begin(localPort);
+  //Serial.println("UDP setup complete");
   pinSetup();
   IMU_setup();
 }
 
 void loop() {
   checkIMU();
-
+  updateMotor();
 }
 
 // Setup Functions //
@@ -77,25 +77,27 @@ void IMU_setup(){
   Wire.begin();
   compass.init();
   compass.enableDefault();
-  compass.m_min = (LSM303::vector<int16_t>){-5867, -4073, -4321};
-  compass.m_max = (LSM303::vector<int16_t>){+935, +2096, +1928};
+  compass.m_min = (LSM303::vector<int16_t>){+1254,  +465,   -5355};
+  compass.m_max = (LSM303::vector<int16_t>){+1628,  +627,  -5099};
 }
 
 // Loop Functions //
 
 void checkIMU(){
   compass.read();
-  int az = compass.a.z >> 4;
-  float g = (float)((float)az/1000);
-  if (0.91 > g){
+  float az = (float)compass.a.z * 0.061;
+  float g = az/1000.0;
+  Serial.println(g);
+  if (g > 1.10){
+    Serial.println("Picked up!");
     pickup = true;
   }
-  else {
-    pickup = false;
-  }
+//  else {
+//    pickup = false;
+//  }
 }
 
-void motor(){
+void updateMotor(){
   if (pickup){
     pwm_motL = 0;
     pwm_motR = 0;
