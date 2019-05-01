@@ -36,17 +36,18 @@ void setup() {
 
 void loop() {
   Serial.println("Autocorrecting to north");
+  delay(5000);
   rotate(NORTH);
-  Serial.println("North reached. Heading south)");
+  Serial.println("North reached. Heading south");
   delay(5000); // wait 5 seconds
   rotate(SOUTH);
-  Serial.println("South reached. Heading east)");
+  Serial.println("South reached. Heading east");
   delay(5000); // wait 5 seconds
   rotate(EAST);
-  Serial.println("East reached. Heading west)");
+  Serial.println("East reached. Heading west");
   delay(5000); // wait 5 seconds
   rotate(WEST);
-  Serial.println("West reached. Heading back north)");
+  Serial.println("West reached. Heading back north");
   delay(5000); // wait 5 seconds
   rotate(NORTH);
   Serial.println("Rotation loop complete.");
@@ -77,8 +78,19 @@ void rotate(float des_angle){
   Serial.print("Initial error: ");
   Serial.println(error);
   while(abs(error) > angle_tolerance){
-    analogWrite(MOT_R_A, 100);
-    analogWrite(MOT_R_B, 0);
+
+    //if (error > 0){ // rotate counter-clockwise
+  analogWrite(MOT_R_A, 100);
+  analogWrite(MOT_R_B, 0);
+  analogWrite(MOT_L_A, 0);
+  analogWrite(MOT_L_B, 100);
+    //}
+//    else { // rotate clockwise
+//      analogWrite(MOT_R_A, 0);
+//      analogWrite(MOT_R_B, 100);
+//      analogWrite(MOT_L_A, 100);
+//      analogWrite(MOT_L_B, 0);
+//    }
     compass.read();
     cur_angle = compass.heading();
     error = cur_angle - des_angle;
@@ -90,4 +102,6 @@ void rotate(float des_angle){
   Serial.println("Rotation complete");
   analogWrite(MOT_R_A, 0);
   analogWrite(MOT_R_B, 0);
+  analogWrite(MOT_L_A, 0);
+  analogWrite(MOT_L_B, 0);
 }
